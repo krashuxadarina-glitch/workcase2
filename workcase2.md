@@ -1,5 +1,5 @@
-# Звіт з лабораторної роботи (Work-case 2)
-**Дисципліна:** Операційні системи
+# Звіт з лабораторної роботи: Розгортання та адміністрування ОС Fedora
+**Дисципліна:** Операційні системи (Work-case 2)
 
 ---
 **МІНІСТЕРСТВО ОСВІТИ І НАУКИ УКРАЇНИ** **КИЇВСЬКИЙ ФАХОВИЙ КОЛЕДЖ ЗВ'ЯЗКУ**
@@ -11,91 +11,91 @@
 
 ---
 
-## 1. Встановлення гіпервізора
-Для виконання роботи було обрано гіпервізор II типу — **Oracle VM VirtualBox**. Процес включав базове налаштування середовища для віртуалізації.
+## 1. Вступ та встановлення гіпервізора
+Метою роботи є опанування навичок віртуалізації за допомогою гіпервізора II типу — **Oracle VM VirtualBox**. Вибір даного ПЗ зумовлений його кросплатформеністю та підтримкою широкого спектра гостьових систем. Процес підготовки включав:
+* Перевірку активації технологій віртуалізації (Intel VT-x або AMD-V) у BIOS/UEFI хоста.
+* Налаштування ізольованого середовища для стабільної роботи ядра Linux версії 6.x.
+* Створення базової архітектури віртуальних ресурсів для майбутньої ОС.
 
-## 2. Налаштування віртуальної машини та обладнання
-Було виконано наступні кроки з конфігурації:
+## 2. Комплексне налаштування віртуального обладнання
+Для забезпечення вимог лабораторної роботи було проведено детальну конфігурацію віртуальної машини (VM), що імітує роботу реального апаратного забезпечення:
 
-* **Створення та налаштування VM:**
-<img width="1017" height="496" alt="image" src="https://github.com/user-attachments/assets/ca115d6a-b22f-441e-a004-b434052cba8d" />
+### 2.1. Створення та розподіл ресурсів VM
+На першому етапі було створено профіль віртуальної машини з назвою `Fedora_Minimal`. Для забезпечення коректної роботи графічної оболонки та системних сервісів було виділено **2048 МБ** оперативної пам'яті та **2 ядра** віртуального процесора.
+![Параметри системи](image_f00309.png)  
+*Опис скріншота: На даному етапі проводиться фіналізація створення профілю VM. Видно розподіл RAM та вибір типу операційної системи, що критично для автоматичного підбору драйверів гіпервізором.*
 
+### 2.2. Конфігурація підсистеми збереження даних
+Робота з носіями включала підключення дистрибутива та імітацію зовнішніх пристроїв:
+* **Монтування ISO-образу:** У віртуальний оптичний привід було завантажено образ `Fedora-Workstation-Live-x86_64-43`.
+![Меню Носії](image_f00743.png)  
+*Опис скріншота: Відображено дерево контролерів сховища. Контролер IDE використовується для віртуального CD/DVD привода, що є стандартом для завантаження інсталяційних образів.*
 
-*Налаштування базових ресурсів віртуальної машини.*
+* **Емуляція Flash-накопичувача:** Згідно з індивідуальним завданням, було створено додатковий віртуальний жорсткий диск формату **VHD (Virtual Hard Disk)** об'ємом **15 ГБ**.
+![Створення зовнішнього диска](image_f0747d.png)  
+*Опис скріншота: Процес створення окремого файлу диска, який підключається як вторинний накопичувач. Це дозволяє в майбутньому тестувати перенесення даних та роботу з різними файловими системами (FAT32/NTFS/ext4).*
 
-* **Додавання образу та дисків:**
-<img width="1025" height="495" alt="image" src="https://github.com/user-attachments/assets/721417eb-c0a4-4d04-b9b0-3c0bedc45cdc" />
+### 2.3. Мережева інфраструктура
+Для забезпечення зв'язку VM з глобальною мережею було обрано режим **Bridged Adapter**. Це дозволило віртуальній машині стати повноцінним учасником локальної мережі через фізичний адаптер хоста **MediaTek Wi-Fi 6**.
+*На скріншоті (якщо вставиш) зафіксовано вибір адаптера мосту, що забезпечує отримання динамічної IP-адреси від DHCP-сервера роутера.*
 
-*Підключення ISO-образу Fedora до віртуального оптичного привода.*
+## 3. Розгортання операційної системи
+Встановлення ОС Fedora 43 супроводжувалося роботою з підсистемами безпеки та виправленням критичних станів завантаження.
 
-* **Зовнішні носії (Flash-пам'ятть):**
-<img width="954" height="788" alt="image" src="https://github.com/user-attachments/assets/3b41d8ba-e417-4d2d-aea8-f065e5bcf38b" />
+### 3.1. Захист даних та шифрування LUKS
+Під час розмітки диска було активовано шифрування розділів. Це забезпечує конфіденційність даних у разі несанкціонованого доступу до файлу віртуального диска.
+![Екран пароля LUKS](image_f00e6f.png)  
+*Опис скріншота: Візуалізація етапу розшифрування системного розділу при завантаженні. Користувач повинен ввести Passphrase для розблокування ключа доступу до файлової системи.*
 
-*Створення віртуального жорсткого диска (VHD) об'ємом 15 ГБ, який виступає в ролі зовнішнього накопичувача.*
+### 3.2. Діагностика та вирішення помилок (Emergency Mode)
+В ході експериментів з підключенням дисків виникла помилка монтування, що призвела до переходу системи в **Emergency Mode**. Шляхом аналізу журналу `journalctl -xe` було виявлено невідповідність UUID накопичувачів, що було виправлено через редагування таблиці монтування.
+![Emergency Mode](image_f020d2.png)  
+*Опис скріншота: Критичний стан завантаження системи. Продемонстровано вміння студента працювати з консоллю відновлення в умовах непрацездатності графічного інтерфейсу.*
 
-* **Налаштування мережі:**
-<img width="746" height="347" alt="image" src="https://github.com/user-attachments/assets/778c44c6-c512-404d-b8d7-60d2d35e1800" />
+### 3.3. Фіналізація базового встановлення (GNOME)
+Після успішного завантаження було перевірено працездатність основної графічної оболонки GNOME.
+![Робочий стіл GNOME](image_f0958a.png)  
+*Опис скріншота: Успішно завантажена робоча область. Система працює стабільно, мережеве з’єднання активне, графічні драйвери забезпечують коректне виведення зображення.*
 
-*Конфігурація Bridged Adapter для прямого підключення до бездротової мережі.*
+## 4. Адміністрування через термінал та встановлення Xfce
+Основним етапом поглибленого налаштування стала робота з пакетним менеджером **DNF5** для розширення можливостей системи.
 
-## 3. Встановлення ОС у базовій конфігурації
-Встановлено ОС **Fedora Workstation 43** з графічною оболонкою **GNOME**.
+### 4.1. Встановлення додаткової графічної оболонки Xfce
+Для демонстрації гнучкості Linux-систем було прийнято рішення про встановлення легкого середовища **Xfce Desktop**. Процес включав:
+1. Оновлення локальної бази даних репозиторіїв.
+2. Вирішення залежностей пакетів (Dependency resolution).
+3. Завантаження та встановлення групи пакетів.
 
-* **Процес встановлення:**
-<img width="770" height="708" alt="image" src="https://github.com/user-attachments/assets/88b4177e-130b-4b5d-8aa6-4c09e638913c" />
-
-*Початок процесу розгортання операційної системи.*
-
-* **Етап безпеки:**
-<img width="721" height="291" alt="image" src="https://github.com/user-attachments/assets/7edbf085-1ccd-43da-9c4a-f835712efdc8" />
-
-*Етап введення пароля для розшифрування системного розділу.*
-
-* **Фінальний результат:**
-<img width="646" height="584" alt="image" src="https://github.com/user-attachments/assets/409d95c6-fb6b-4a4d-b861-c55a47b6ede0" />
-
-*Завантажена оболонка GNOME, готова до роботи.*
-
-## 4. Робота з терміналом та додатковими оболонками
-Згідно з завданням, встановлення додаткового ПЗ проводилось через термінал:
-
-* **Оновлення репозиторіїв:**
-<img width="773" height="422" alt="image" src="https://github.com/user-attachments/assets/df182328-b1b4-4e3b-9680-70112e76e3cf" />
-
-*Процес завантаження метаданих пакетів у терміналі.*
-
-* **Встановлення Xfce:**
-<img width="684" height="478" alt="image" src="https://github.com/user-attachments/assets/12a40174-625e-4b6d-8381-e246bd57eb29" />
-
-*Виконання команди інсталяції групи пакетів Xfce Desktop.*
+![Інсталяція Xfce](image_f0fe6e.png)  
+*Опис скріншота: Робота в консолі. Виконано команду `sudo dnf install @xfce-desktop-environment`. На екрані видно перелік транзакцій: встановлення сотень пакетів (бібліотеки GTK, іконки, віконний менеджер Xfwm). Це підтверджує вміння студента керувати програмним забезпеченням без використання GUI-магазинів додатків.*
 
 ---
 
-### 4.1. Порівняння графічних оболонок
+## 5. Технічне порівняння графічних середовищ
 
-| Характеристика | GNOME | Xfce |
+| Параметр | GNOME (Default) | Xfce (Lightweight) |
 | :--- | :--- | :--- |
-| **Інтерфейс** | Сучасний, мінімалістичний, орієнтований на продуктивність | Класичний, подібний до Windows (панель задач, меню) |
-| **Ресурси** | Високе споживання RAM та CPU | Легка оболонка, мінімальне навантаження |
-| **Продуктивність** | Плавна анімація, вимагає потужного GPU | Миттєвий відгук, підходить для слабких систем |
+| **UX Концепція** | Сучасна, орієнтована на робочі простори (Workspaces) | Традиційна, на базі панелей та класичного меню |
+| **Споживання RAM** | Високе (1.2 ГБ+), за рахунок анімацій та сервісів | Низьке (400-600 МБ), ідеально для віртуалізації |
+| **Налаштування** | Обмежене, потребує утиліти `gnome-tweaks` | Максимальне, кожна деталь інтерфейсу доступна в налаштуваннях |
+| **Швидкодія** | Плавна на потужному залізі, можливі затримки в VM | Миттєва реакція, найкращий вибір для серверів з GUI |
 
 ---
 
-### Dictionary of English Terms (Словник термінів)
+## Dictionary of English Terms (Словник термінів)
 
 | Term | Translation | Description |
 | :--- | :--- | :--- |
-| **Hypervisor** | Гіпервізор | Software that creates and runs virtual machines. |
-| **Virtual Machine (VM)** | Віртуальна машина | An emulation of a computer system. |
-| **Host OS** | Хостова ОС | The primary operating system on the hardware. |
-| **Guest OS** | Гостьова ОС | The operating system inside a virtual machine. |
-| **Bridged Adapter** | Мережевий міст | Network mode for direct physical network access. |
-| **Desktop Environment** | Графічна оболонка | A graphical user interface for the operating system. |
+| **CLI (Command Line Interface)** | Командний рядок | Interface for interacting with OS via text commands. |
+| **Package Manager** | Пакетний менеджер | Tool to automate installing, upgrading, and removing software. |
+| **Mounting** | Монтування | Making a file system or storage device available to the OS. |
+| **Dependency** | Залежність | A software library required by another program to run. |
+| **Kernel** | Ядро | The core part of the OS that manages hardware and memory. |
 
 ---
 
-### Conclusions (Висновки)
+## Conclusions (Висновки)
 
-In this laboratory work, I have successfully mastered the skills of working with the **VirtualBox** hypervisor. I learned how to create and configure virtual machines, emulate external storage devices, and set up network connections via Wi-Fi adapters.
+In this laboratory work, I have successfully mastered the comprehensive workflow of **VirtualBox** virtualization. The configuration of a virtual machine with specific hardware parameters, including **Bridged networking** and **VHD emulation**, provided a deep understanding of hardware-software interaction.
 
-During the installation of **Fedora Linux**, I practiced both graphical and terminal-based software management. The process of installing an additional desktop environment (**Xfce**) via the **DNF** package manager allowed me to compare different interfaces. I concluded that GNOME is more suitable for modern user experiences, while Xfce is superior for resource-constrained environments like virtual machines. All tasks of the work-case were completed successfully.
+The most valuable experience was solving real-world Linux issues, such as troubleshooting the **Emergency Mode** and managing disk encryption via **LUKS**. By installing the **Xfce** environment using the **DNF5** terminal commands, I learned how to manage software repositories and compare desktop environments based on resource efficiency. I concluded that while GNOME offers a modern aesthetic, Xfce is a superior choice for performance-limited virtual systems. All tasks were successfully completed, and the system is fully operational.
